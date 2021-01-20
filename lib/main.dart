@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
+//import 'dart:html';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +16,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _scanBarcode = 'Unknown';
+  String _dataResponse = 'Unknown';
 
   @override
   void initState() {
@@ -33,6 +37,28 @@ class _MyAppState extends State<MyApp> {
           "#66ff66", "Cancel", true, ScanMode.QR);
       print("codee :::::::::::::::::");
       print(barcodeScanRes);
+      var code = barcodeScanRes.substring(58);
+      print("Enviando????????????????????????????????????");
+      print(code);
+      var url = '/api/api/public/descargarDocumento?tipo=json';
+      // var response = await http.post(url, body: {'url': code }, headers: { 'content-type': 'application/json;charset=UTF-8'} );
+      var response = await  http.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'url': code,
+        }),
+      );
+      print('Response status::____________: ${response.statusCode}');
+      print('Response body______________: ${response.body}');
+      print('Response body______________: ${response.body.characters}');
+      // print('Response body______________: ${response.body.estado}');
+      setState(() {
+        _dataResponse = response.body.characters as String;
+      });
+      // {"estado":"EXPIRADO","nro_documento":"123132","fecha_vigencia":"martes, 19º enero 2021"}
     } on PlatformException {
       barcodeScanRes = 'Failed to get platform version.';
     }
@@ -78,7 +104,7 @@ class _MyAppState extends State<MyApp> {
               return Container(
                   alignment: Alignment.center,
                   child: ListView(
-                    padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 30),
                     children: <Widget> [
                       TextField(
                         autofocus: true,
@@ -94,7 +120,9 @@ class _MyAppState extends State<MyApp> {
                         onChanged: (valor) {
                           print(valor);
                         }
-                      )
+                      ),
+                      Text("Datos :"),
+                      Text(_dataResponse)
                     ],
                   ));
             }),
@@ -102,7 +130,7 @@ class _MyAppState extends State<MyApp> {
             onPressed:  () => setState(() {
               scanQR();
             }),
-            tooltip: 'Escanear QR',
+            tooltip: 'Leer QR',
             child: Icon(Icons.qr_code_scanner),
           ),
             floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
